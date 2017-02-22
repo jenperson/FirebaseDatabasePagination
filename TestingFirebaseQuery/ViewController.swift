@@ -96,6 +96,7 @@ class ViewController: UIViewController {
             
             if self.startKey != nil && !children.isEmpty {
                 children.removeFirst()
+                
             }
             self.data.append(snapshot.value as! String)
             self.tableView.insertRows(at: [IndexPath(row: self.data.count-1, section: 0)], with: .automatic)
