@@ -24,7 +24,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        configureTableViewFirst()
+       configureTableViewChanged()
+        configureTableView()
         // Do any additional setup after loading the view, typically from a nib.
     }
 
@@ -38,32 +39,33 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func configureTableViewFirst() {
+    func configureTableViewChanged() {
         isLoading = true
         ref = FIRDatabase.database().reference()
         var query = ref.child("values").queryOrderedByKey()
         
-       /* if startKey != nil {
+       if startKey != nil {
             print("startKey: \(startKey)")
-            data.removeLast()
+            //data.removeLast()
             print("last data: \(data.last)")
             query = query.queryStarting(atValue: startKey)
-           // count += 1
+           count += 1
             
-        }*/
+        }
         query.queryLimited(toFirst: UInt(count-1)).observe(.childAdded, with: { (snapshot) -> Void in
             guard var children = snapshot.children.allObjects as? [FIRDataSnapshot] else {
                 // Handle error
                 return
             }
             
-            // with each child found, the start key changes to that child's  value
+            /*// with each child found, the start key changes to that child's  value
             self.startKey = snapshot.key
-            print("startkey \(self.startKey)")
+            print("startkey \(self.startKey)")*/
             
             if self.startKey != nil && !children.isEmpty {
                 children.removeFirst()
             }
+            self.startKey = children.last?.value as! String
             self.data.append(snapshot.value as! String)
             self.tableView.insertRows(at: [IndexPath(row: self.data.count-1, section: 0)], with: .automatic)
                            // self.tableView.reloadData()
@@ -80,26 +82,31 @@ class ViewController: UIViewController {
         
         if startKey != nil {
             print("startKey: \(startKey)")
-            data.removeLast()
+            //data.removeLast()
             tableView.reloadData()
             print("last data: \(data.last)")
             query = query.queryStarting(atValue: startKey)
         }
-        query.queryLimited(toFirst: UInt(count)).observe(.childAdded, with: { (snapshot) -> Void in
+        query.queryLimited(toFirst: UInt(count)).observeSingleEvent(of: .value, with: { (snapshot) -> Void in
             guard var children = snapshot.children.allObjects as? [FIRDataSnapshot] else {
                 // Handle error
                 return
             }
-            
-            self.startKey = snapshot.key
-            print("startkey \(self.startKey)")
+          /*
+            self.startKey = children.last?.key
+            print("startkey \(self.startKey)")*/
             
             if self.startKey != nil && !children.isEmpty {
                 children.removeFirst()
                 
             }
-            self.data.append(snapshot.value as! String)
-            self.tableView.insertRows(at: [IndexPath(row: self.data.count-1, section: 0)], with: .automatic)
+            self.startKey = children.last?.key
+            for child in children {
+                self.data.append(child.value as! String)
+                self.tableView.insertRows(at: [IndexPath(row: self.data.count-1, section: 0)], with: .automatic)
+            }
+            //self.data.append(snapshot.children as! [String])
+            //self.tableView.insertRows(at: [IndexPath(row: self.data.count-1, section: 0)], with: .automatic)
         })
 
         isLoading = false
